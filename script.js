@@ -1,43 +1,71 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('registration-form');
-    const feedbackDiv = document.getElementById('form-feedback');
+    const addButton = document.getElementById('add-task-btn');
+    const taskInput = document.getElementById('task-input');
+    const taskList = document.getElementById('task-list');
 
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
+    // Load tasks from Local Storage
+    function loadTasks() {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        storedTasks.forEach(taskText => addTask(taskText, false)); // 'false' to not save again to Local Storage
+    }
 
-        let isValid = true;
-        const messages = [];
+    // Add task function
+    function addTask(taskText, save = true) {
+        const li = document.createElement('li');
+        li.textContent = taskText;
 
-        const username = document.getElementById('username').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        removeButton.className = 'remove-btn';
+        removeButton.onclick = () => {
+            taskList.removeChild(li);
+            removeTaskFromLocalStorage(taskText);
+        };
 
-        // Username validation
-        if (username.length < 3) {
-            isValid = false;
-            messages.push('Username must be at least 3 characters long.');
+        li.appendChild(removeButton);
+        taskList.appendChild(li);
+
+        taskInput.value = '';
+
+        if (save) {
+            saveTaskToLocalStorage(taskText);
         }
+    }
 
-        // Email validation
-        if (!email.includes('@') || !email.includes('.')) {
-            isValid = false;
-            messages.push('Please enter a valid email address.');
-        }
+    // Save task to Local Storage
+    function saveTaskToLocalStorage(taskText) {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        storedTasks.push(taskText);
+        localStorage.setItem('tasks', JSON.stringify(storedTasks));
+    }
 
-        // Password validation
-        if (password.length < 8) {
-            isValid = false;
-            messages.push('Password must be at least 8 characters long.');
-        }
+    // Remove task from Local Storage
+    function removeTaskFromLocalStorage(taskText) {
+        let storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        storedTasks = storedTasks.filter(task => task !== taskText);
+        localStorage.setItem('tasks', JSON.stringify(storedTasks));
+    }
 
-        // Display feedback
-        feedbackDiv.style.display = "block";
-        if (isValid) {
-            feedbackDiv.textContent = "Registration successful!";
-            feedbackDiv.style.color = "#28a745";
+    addButton.addEventListener('click', () => {
+        const taskText = taskInput.value.trim();
+        if (taskText !== "") {
+            addTask(taskText);
         } else {
-            feedbackDiv.innerHTML = messages.join('<br>');
-            feedbackDiv.style.color = "#dc3545";
+            alert("Please enter a task.");
         }
     });
+
+    taskInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            const taskText = taskInput.value.trim();
+            if (taskText !== "") {
+                addTask(taskText);
+            } else {
+                alert("Please enter a task.");
+            }
+        }
+    });
+
+    loadTasks(); // Load tasks when the DOM content is loaded
 });
+
